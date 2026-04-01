@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="FitTrack Pro Goals — Set fitness goals, track progress, and celebrate milestones."/>
+  <title>Goals — FitTrack Pro</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- Mobile Top Header -->
+  <header class="mobile-header">
+    <div class="mobile-header-logo">
+      <div class="mobile-header-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="mobile-header-logo-text">FitTrack Pro</span>
+    </div>
+    <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">✕</button>
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="sidebar-logo-text">FitTrack Pro</span>
+    </div>
+    <div class="sidebar-user">
+      <div id="sidebar-avatar">U</div>
+      <div>
+        <div id="sidebar-name" style="font-size:13px;font-weight:600;color:var(--text);">Loading…</div>
+        <div style="font-size:11px;color:var(--muted);">Member</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main Menu</div>
+      <a href="/dashboard.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="/workouts.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">💪</span> Workouts
+      </a>
+      <a href="/diet.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🥗</span> Diet &amp; Nutrition
+      </a>
+      <a href="/goals.html" class="nav-item active">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🎯</span> Goals
+      </a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="/profile.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">👤</span> Profile
+      </a>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <button class="logout-btn" onclick="logout()"><span>→</span> Sign Out</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Goals</h1>
+        <p>Set targets, track progress, and celebrate achievements</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-add-goal')">
+        <span>+</span> Add Goal
+      </button>
+    </div>
+
+    <!-- Summary bar -->
+    <div id="goals-summary" style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;"></div>
+
+    <div class="goals-grid" id="goals-grid">
+      <div class="empty-state" style="grid-column:1/-1;">
+        <img src="/images/goals_illustration.png" alt="Set your goals" style="width:130px;height:auto;margin:0 auto 12px;opacity:0.85;"/>
+        <h3>No goals set yet</h3>
+        <p>Add your first fitness goal to get started</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Goal Modal -->
+  <div class="modal-overlay" id="modal-add-goal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Add New Goal</h2>
+        <button class="modal-close" onclick="closeModal('modal-add-goal')">✕</button>
+      </div>
+      <form id="form-add-goal" onsubmit="handleAddGoal(event)">
+        <div class="form-group">
+          <label class="form-label" for="g-title">Goal Title *</label>
+          <input class="form-control" id="g-title" type="text" placeholder="e.g. Run 100km this month" required/>
+        </div>
+        <div class="form-row cols-3">
+          <div class="form-group">
+            <label class="form-label" for="g-target">Target *</label>
+            <input class="form-control" id="g-target" type="number" placeholder="100" min="0" step="any" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="g-current">Current Progress</label>
+            <input class="form-control" id="g-current" type="number" placeholder="0" min="0" step="any"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="g-unit">Unit</label>
+            <input class="form-control" id="g-unit" type="text" placeholder="km, kg, reps…"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="g-deadline">Deadline (optional)</label>
+          <input class="form-control" id="g-deadline" type="date" style="max-width:220px;"/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-add-goal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-add-goal">Add Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Update Progress Modal -->
+  <div class="modal-overlay" id="modal-update-goal">
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-header">
+        <h2>Update Progress</h2>
+        <button class="modal-close" onclick="closeModal('modal-update-goal')">✕</button>
+      </div>
+      <form id="form-update-goal" onsubmit="handleUpdateProgress(event)">
+        <input type="hidden" id="update-goal-id"/>
+        <div class="form-group">
+          <label class="form-label" for="update-current">Current Value (<span id="update-unit-label">units</span>)</label>
+          <input class="form-control" id="update-current" type="number" placeholder="0" min="0" step="any" required/>
+        </div>
+        <div id="update-progress-preview" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;font-size:13px;color:var(--muted);display:none;">
+          Preview: <strong id="preview-pct" style="color:var(--accent);">0%</strong> complete
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-update-goal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-update-progress">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="utils.js"></script>
+  <script>
+    guardAuth();
+    loadSidebarUser();
+
+    let _updateTarget = 0;
+
+    async function loadGoals() {
+      const goals = await authFetch(`${API}/goals`);
+      const grid  = document.getElementById("goals-grid");
+      const summaryEl = document.getElementById("goals-summary");
+
+      if (!goals || !goals.length) {
+        summaryEl.innerHTML = "";
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <img src="/images/goals_illustration.png" alt="No goals" style="width:130px;height:auto;margin:0 auto 12px;opacity:0.85;"/>
+            <h3>No goals set yet</h3>
+            <p>Add your first fitness goal to get started</p>
+          </div>`;
+        return;
+      }
+
+      const active    = goals.filter(g => !g.completed).length;
+      const completed = goals.filter(g => g.completed).length;
+      summaryEl.innerHTML = `
+        <div class="stat-card" style="padding:14px 18px;animation:none;flex:1;min-width:140px;">
+          <div class="stat-value" style="font-size:22px;">${goals.length}</div>
+          <div class="stat-label">Total Goals</div>
+        </div>
+        <div class="stat-card" style="padding:14px 18px;animation:none;flex:1;min-width:140px;">
+          <div class="stat-value" style="font-size:22px;color:var(--accent);">${active}</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card" style="padding:14px 18px;animation:none;flex:1;min-width:140px;">
+          <div class="stat-value" style="font-size:22px;color:var(--success);">${completed}</div>
+          <div class="stat-label">Completed</div>
+        </div>`;
+
+      grid.innerHTML = goals.map(g => {
+        const pct  = Math.min(100, Math.round((g.current / g.target) * 100)) || 0;
+        const done = g.completed;
+        return `
+          <div class="goal-card">
+            <div class="goal-card-header">
+              <div class="goal-title">${escapeHtml(g.title)}</div>
+              <span class="badge ${done ? 'badge-success' : 'badge-active'}">${done ? '✓ Done' : 'Active'}</span>
+            </div>
+            ${g.deadline ? `<div class="goal-deadline">📅 Due: ${formatDate(g.deadline)}</div>` : '<div style="height:20px;"></div>'}
+            <div class="progress-bar">
+              <div class="progress-fill ${done?'completed':''}" style="width:${pct}%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div class="goal-stats"><strong>${escapeHtml(String(g.current))}</strong> / ${escapeHtml(String(g.target))} ${escapeHtml(g.unit)}</div>
+              <span style="font-size:13px;font-weight:700;color:${done?'var(--success)':'var(--accent)'};">${pct}%</span>
+            </div>
+            <div class="goal-actions">
+              <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;" onclick="openUpdateModal('${escapeHtml(g._id)}','${escapeHtml(g.unit)}',${g.current},${g.target})">📈 Update</button>
+              <button class="btn btn-danger  btn-sm btn-icon" onclick="deleteGoal('${escapeHtml(g._id)}')" title="Delete">🗑️</button>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    async function handleAddGoal(e) {
+      e.preventDefault();
+      const body = {
+        title:    document.getElementById("g-title").value.trim(),
+        target:   parseFloat(document.getElementById("g-target").value),
+        current:  parseFloat(document.getElementById("g-current").value) || 0,
+        unit:     document.getElementById("g-unit").value.trim() || "units",
+        deadline: document.getElementById("g-deadline").value || null
+      };
+      const btn = document.getElementById("btn-add-goal");
+      btn.disabled = true; btn.innerHTML = '<span class="spinner dark"></span>';
+      const result = await authFetch(`${API}/goals`, "POST", body);
+      btn.disabled = false; btn.textContent = "Add Goal";
+      if (result) {
+        toast("Goal added!");
+        document.getElementById("form-add-goal").reset();
+        closeModal("modal-add-goal");
+        loadGoals();
+      }
+    }
+
+    function openUpdateModal(id, unit, current, target) {
+      _updateTarget = target;
+      document.getElementById("update-goal-id").value      = id;
+      document.getElementById("update-unit-label").textContent = escapeHtml(unit);
+      document.getElementById("update-current").value      = current;
+      const pct = Math.min(100, Math.round((current / target) * 100));
+      document.getElementById("preview-pct").textContent  = pct + "%";
+      document.getElementById("update-progress-preview").style.display = "block";
+      openModal("modal-update-goal");
+    }
+
+    document.getElementById("update-current").addEventListener("input", function() {
+      const val = parseFloat(this.value) || 0;
+      const pct = Math.min(100, Math.round((val / _updateTarget) * 100));
+      document.getElementById("preview-pct").textContent = pct + "%";
+      document.getElementById("update-progress-preview").style.display = "block";
+    });
+
+    async function handleUpdateProgress(e) {
+      e.preventDefault();
+      const id      = document.getElementById("update-goal-id").value;
+      const current = parseFloat(document.getElementById("update-current").value);
+      const btn = document.getElementById("btn-update-progress");
+      btn.disabled = true; btn.innerHTML = '<span class="spinner dark"></span>';
+      const result = await authFetch(`${API}/goals/${id}`, "PUT", { current });
+      btn.disabled = false; btn.textContent = "Update";
+      if (result) {
+        toast(result.completed ? "🎉 Goal completed! Great work!" : "Progress updated!");
+        closeModal("modal-update-goal");
+        loadGoals();
+      }
+    }
+
+    async function deleteGoal(id) {
+      if (!confirm("Delete this goal? This cannot be undone.")) return;
+      const result = await authFetch(`${API}/goals/${id}`, "DELETE");
+      if (result) { toast("Goal deleted"); loadGoals(); }
+    }
+
+    loadGoals();
+  </script>
+</body>
+</html>

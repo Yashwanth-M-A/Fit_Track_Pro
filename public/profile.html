@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="FitTrack Pro Profile — Edit your profile, fitness info, and view detailed BMI & health analysis."/>
+  <title>Profile — FitTrack Pro</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* ── Fitness badge chips ── */
+    .fitness-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+    .fitness-chip {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 13px; border-radius:999px; font-size:12px; font-weight:600;
+      border:1px solid var(--border); background:var(--bg); color:var(--text2);
+    }
+    .chip-goal     { background:rgba(37,99,235,0.08);  color:var(--accent);  border-color:rgba(37,99,235,0.2); }
+    .chip-activity { background:rgba(16,185,129,0.08); color:#059669;        border-color:rgba(16,185,129,0.2); }
+    .chip-level    { background:rgba(139,92,246,0.08); color:#7c3aed;        border-color:rgba(139,92,246,0.2); }
+    .chip-gender   { background:rgba(244,63,94,0.08);  color:#e11d48;        border-color:rgba(244,63,94,0.2); }
+    .chip-diet     { background:rgba(245,158,11,0.08); color:#d97706;        border-color:rgba(245,158,11,0.2); }
+
+    /* ── Gender selector cards ── */
+    .gender-selector { display:flex; gap:10px; margin-top:6px; }
+    .gender-option { display:none; }
+    .gender-label {
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;
+      padding:12px 8px; border-radius:var(--r-sm); border:2px solid var(--border);
+      cursor:pointer; font-size:13px; font-weight:600; color:var(--muted);
+      background:var(--bg); transition:all 0.2s ease;
+    }
+    .gender-label .g-icon { font-size:22px; }
+    .gender-option:checked + .gender-label {
+      border-color:var(--accent); background:var(--accent-bg); color:var(--accent);
+    }
+    .gender-label:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* ── BMI scale gradient bar ── */
+    .bmi-scale {
+      position:relative; height:12px; border-radius:999px; margin:12px 0 6px;
+      background:linear-gradient(to right,#0284c7 0%,#059669 30%,#d97706 65%,#dc2626 100%);
+    }
+    .bmi-needle {
+      position:absolute; top:-5px; width:5px; height:22px;
+      background:var(--text); border-radius:3px; transform:translateX(-50%);
+      transition:left 0.55s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:0 1px 6px rgba(0,0,0,0.35);
+    }
+    .bmi-scale-labels {
+      display:flex; justify-content:space-between;
+      font-size:10px; color:var(--light); margin-bottom:12px;
+    }
+
+    /* ── Metric rows inside BMI card ── */
+    .bmi-metric-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:9px 0; border-bottom:1px solid var(--border); font-size:13px;
+    }
+    .bmi-metric-row:last-child { border-bottom:none; }
+    .bmi-metric-label { color:var(--muted); font-weight:500; }
+    .bmi-metric-val   { font-weight:700; color:var(--text2); }
+
+    /* ── Health risk badge ── */
+    .health-risk-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 12px; border-radius:999px; font-size:11.5px; font-weight:700;
+    }
+    .risk-low    { background:rgba(5,150,105,0.12);  color:#059669; border:1px solid rgba(5,150,105,0.25); }
+    .risk-mod    { background:rgba(217,119,6,0.12);  color:#d97706; border:1px solid rgba(217,119,6,0.25); }
+    .risk-high   { background:rgba(220,38,38,0.12);  color:#dc2626; border:1px solid rgba(220,38,38,0.25); }
+    .risk-undef  { background:rgba(100,116,139,0.1); color:var(--muted); border:1px solid var(--border); }
+
+    /* ── Macro target pills ── */
+    .macro-targets { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+    .macro-target-pill {
+      display:flex; flex-direction:column; align-items:center; gap:3px;
+      padding:10px 6px; border-radius:var(--r-sm); font-size:12px;
+    }
+    .macro-target-pill .mt-val { font-size:16px; font-weight:800; }
+    .mt-protein { background:rgba(37,99,235,0.07);  color:var(--accent); }
+    .mt-carbs   { background:rgba(245,158,11,0.07); color:#d97706; }
+    .mt-fat     { background:rgba(220,38,38,0.07);  color:#dc2626; }
+
+    /* ── Section titles in the form ── */
+    .form-section-title {
+      font-size:11.5px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.07em; color:var(--light); margin:20px 0 12px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .form-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── Waist risk bar ── */
+    .whr-bar {
+      position:relative; height:10px; border-radius:999px; margin:8px 0 4px;
+      background:linear-gradient(to right,#059669 0%,#d97706 55%,#dc2626 100%);
+    }
+    .whr-needle {
+      position:absolute; top:-4px; width:4px; height:18px;
+      background:var(--text); border-radius:2px; transform:translateX(-50%);
+      transition:left 0.5s ease; box-shadow:0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    /* ── Mini info card inside BMI section ── */
+    .bmi-info-box {
+      background:var(--accent-bg); border:1px solid rgba(37,99,235,0.15);
+      border-radius:var(--r-sm); padding:11px 13px; font-size:12.5px;
+      color:var(--accent); line-height:1.6; margin-top:14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile Top Header -->
+  <header class="mobile-header">
+    <div class="mobile-header-logo">
+      <div class="mobile-header-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="mobile-header-logo-text">FitTrack Pro</span>
+    </div>
+    <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">✕</button>
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="sidebar-logo-text">FitTrack Pro</span>
+    </div>
+    <div class="sidebar-user">
+      <div id="sidebar-avatar">U</div>
+      <div>
+        <div id="sidebar-name" style="font-size:13px;font-weight:600;color:var(--text);">Loading…</div>
+        <div style="font-size:11px;color:var(--muted);">Member</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main Menu</div>
+      <a href="/dashboard.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="/workouts.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">💪</span> Workouts
+      </a>
+      <a href="/diet.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🥗</span> Diet &amp; Nutrition
+      </a>
+      <a href="/goals.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🎯</span> Goals
+      </a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="/profile.html" class="nav-item active">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">👤</span> Profile
+      </a>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <button class="logout-btn" onclick="logout()"><span>→</span> Sign Out</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Profile</h1>
+        <p>Manage your account, fitness details, and health metrics</p>
+      </div>
+    </div>
+
+    <!-- Fitness chips summary -->
+    <div id="fitness-chips-bar" class="fitness-chips"></div>
+
+    <div class="profile-layout">
+      <!-- ══════════ Left Column ══════════ -->
+      <div class="profile-left">
+
+        <!-- Avatar Card -->
+        <div class="avatar-card">
+          <div class="avatar-circle" id="profile-avatar-circle">U</div>
+          <div class="avatar-name"  id="profile-name">—</div>
+          <div class="avatar-email" id="profile-email">—</div>
+
+          <!-- Gender badge prominently under name -->
+          <div id="gender-display-badge" style="display:none;margin:4px 0 10px;"></div>
+
+          <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)"/>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('avatar-file-input').click()" style="width:100%;justify-content:center;margin-bottom:14px;">
+            📷 Change Photo
+          </button>
+
+          <!-- Quick body metrics grid -->
+          <div class="stats-mini-grid" style="grid-template-columns:repeat(2,1fr);">
+            <div class="stats-mini-item">
+              <div class="stats-mini-val" id="mini-weight">—</div>
+              <div class="stats-mini-lbl">Weight</div>
+            </div>
+            <div class="stats-mini-item">
+              <div class="stats-mini-val" id="mini-height">—</div>
+              <div class="stats-mini-lbl">Height</div>
+            </div>
+            <div class="stats-mini-item">
+              <div class="stats-mini-val" id="mini-age">—</div>
+              <div class="stats-mini-lbl">Age</div>
+            </div>
+            <div class="stats-mini-item">
+              <div class="stats-mini-val" id="mini-target">—</div>
+              <div class="stats-mini-lbl">Target Wt.</div>
+            </div>
+          </div>
+
+          <!-- Activity summary -->
+          <div class="divider"></div>
+          <div style="font-size:12px;color:var(--muted);text-align:left;">
+            <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Total workouts</span><strong id="q-workouts" style="color:var(--text);">—</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Total meals</span><strong id="q-meals" style="color:var(--text);">—</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Active goals</span><strong id="q-goals" style="color:var(--text);">—</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Workout days/wk</span><strong id="q-workout-days" style="color:var(--text);">—</strong></div>
+          </div>
+        </div>
+
+        <!-- ══════════ Enhanced BMI Card ══════════ -->
+        <div class="bmi-card">
+          <h3 style="margin-bottom:14px;">⚖️ BMI &amp; Health Metrics</h3>
+
+          <!-- Big BMI number + label -->
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
+            <div class="bmi-value" id="bmi-value">—</div>
+            <div class="bmi-label" id="bmi-label">Enter weight &amp; height</div>
+          </div>
+
+          <!-- Health risk badge -->
+          <div id="bmi-risk-badge" style="margin-bottom:10px;"></div>
+
+          <!-- Gradient scale bar with needle -->
+          <div class="bmi-scale">
+            <div class="bmi-needle" id="bmi-needle" style="left:0%;display:none;"></div>
+          </div>
+          <div class="bmi-scale-labels">
+            <span>Underweight<br/>&lt;18.5</span>
+            <span>Normal<br/>18.5–24.9</span>
+            <span>Overweight<br/>25–29.9</span>
+            <span>Obese<br/>≥30</span>
+          </div>
+
+          <!-- BMI category color legend -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;background:#0284c7;border-radius:50%;display:inline-block;"></span><span style="color:var(--muted);">Underweight</span><span style="color:var(--light);margin-left:auto;">&lt;18.5</span></div>
+            <div style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;background:#059669;border-radius:50%;display:inline-block;"></span><span style="color:var(--muted);">Normal</span><span style="color:var(--light);margin-left:auto;">18.5–24.9</span></div>
+            <div style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;background:#d97706;border-radius:50%;display:inline-block;"></span><span style="color:var(--muted);">Overweight</span><span style="color:var(--light);margin-left:auto;">25–29.9</span></div>
+            <div style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;background:#dc2626;border-radius:50%;display:inline-block;"></span><span style="color:var(--muted);">Obese</span><span style="color:var(--light);margin-left:auto;">≥30</span></div>
+          </div>
+
+          <div class="divider" style="margin:10px 0;"></div>
+
+          <!-- Derived health metrics -->
+          <div class="bmi-metric-row">
+            <span class="bmi-metric-label">🎯 Ideal Weight Range</span>
+            <span class="bmi-metric-val" id="bmi-ideal">—</span>
+          </div>
+          <div class="bmi-metric-row">
+            <span class="bmi-metric-label">📉 Weight to Lose/Gain</span>
+            <span class="bmi-metric-val" id="bmi-delta">—</span>
+          </div>
+          <div class="bmi-metric-row">
+            <span class="bmi-metric-label">🔥 BMR (Basal Metabolic Rate)</span>
+            <span class="bmi-metric-val" id="bmi-bmr">—</span>
+          </div>
+          <div class="bmi-metric-row">
+            <span class="bmi-metric-label">⚡ Daily Calories (TDEE)</span>
+            <span class="bmi-metric-val" id="bmi-tdee">—</span>
+          </div>
+          <div class="bmi-metric-row">
+            <span class="bmi-metric-label">📏 Body Fat % (Est.)</span>
+            <span class="bmi-metric-val" id="bmi-bodyfat">—</span>
+          </div>
+          <div class="bmi-metric-row">
+            <span class="bmi-metric-label">💧 Daily Water (Est.)</span>
+            <span class="bmi-metric-val" id="bmi-water">—</span>
+          </div>
+
+          <!-- Waist-to-Height Ratio section -->
+          <div id="whr-section" style="display:none;">
+            <div class="divider" style="margin:12px 0 10px;"></div>
+            <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">📐 Waist-to-Height Ratio (WHtR)</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;">
+              <span id="whtr-value" style="font-size:22px;font-weight:800;color:var(--text2);">—</span>
+              <span id="whtr-label" style="font-size:13px;font-weight:600;color:var(--muted);"></span>
+            </div>
+            <div class="whr-bar">
+              <div class="whr-needle" id="whtr-needle" style="left:0%;display:none;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--light);margin-bottom:8px;">
+              <span>Healthy<br/>&lt;0.5</span><span>Overweight<br/>0.5–0.6</span><span>High Risk<br/>&gt;0.6</span>
+            </div>
+          </div>
+
+          <!-- Macro targets -->
+          <div id="macro-section" style="display:none;">
+            <div class="divider" style="margin:12px 0 10px;"></div>
+            <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;">🍽️ Recommended Daily Macros</div>
+            <div class="macro-targets">
+              <div class="macro-target-pill mt-protein">
+                <span class="mt-val" id="macro-protein">—</span>
+                <span>Protein (g)</span>
+              </div>
+              <div class="macro-target-pill mt-carbs">
+                <span class="mt-val" id="macro-carbs">—</span>
+                <span>Carbs (g)</span>
+              </div>
+              <div class="macro-target-pill mt-fat">
+                <span class="mt-val" id="macro-fat">—</span>
+                <span>Fat (g)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tip box -->
+          <div id="bmi-tip" class="bmi-info-box" style="display:none;"></div>
+        </div>
+
+      </div>
+
+      <!-- ══════════ Right Column ══════════ -->
+      <div class="profile-right">
+
+        <!-- Edit Profile Form -->
+        <div class="form-card">
+          <h2>✏️ Edit Profile</h2>
+          <form id="form-profile" onsubmit="handleSaveProfile(event)">
+
+            <!-- ── Personal Information ── -->
+            <div class="form-section-title">Personal Information</div>
+            <div class="form-group">
+              <label class="form-label" for="p-name">Full Name</label>
+              <input class="form-control" id="p-name" type="text" placeholder="John Doe" required/>
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label" for="p-age">Age</label>
+                <input class="form-control" id="p-age" type="number" placeholder="25" min="1" max="120" oninput="updateBMI()"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Gender</label>
+                <!-- Visual gender selector -->
+                <div class="gender-selector">
+                  <input type="radio" name="p-gender-radio" id="gender-male"   class="gender-option" value="Male"   onchange="updateBMI()"/>
+                  <label class="gender-label" for="gender-male"><span class="g-icon">♂️</span>Male</label>
+
+                  <input type="radio" name="p-gender-radio" id="gender-female" class="gender-option" value="Female" onchange="updateBMI()"/>
+                  <label class="gender-label" for="gender-female"><span class="g-icon">♀️</span>Female</label>
+
+                  <input type="radio" name="p-gender-radio" id="gender-other"  class="gender-option" value="Other"  onchange="updateBMI()"/>
+                  <label class="gender-label" for="gender-other"><span class="g-icon">⚧️</span>Other</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Body Measurements ── -->
+            <div class="form-section-title">Body Measurements</div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label" for="p-weight">Current Weight (kg)</label>
+                <input class="form-control" id="p-weight" type="number" placeholder="70" min="1" step="0.1" oninput="updateBMI()"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="p-target-weight">Target Weight (kg)</label>
+                <input class="form-control" id="p-target-weight" type="number" placeholder="65" min="1" step="0.1" oninput="updateBMI()"/>
+              </div>
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label" for="p-height">Height (cm)</label>
+                <input class="form-control" id="p-height" type="number" placeholder="175" min="50" oninput="updateBMI()"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="p-waist">Waist Circumference (cm)</label>
+                <input class="form-control" id="p-waist" type="number" placeholder="80" min="30" step="0.1" oninput="updateBMI()"/>
+              </div>
+            </div>
+
+            <!-- ── Fitness Profile ── -->
+            <div class="form-section-title">Fitness Profile</div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label" for="p-fitness-level">Fitness Level</label>
+                <select class="form-control" id="p-fitness-level">
+                  <option value="">Select level</option>
+                  <option value="Beginner">🌱 Beginner</option>
+                  <option value="Intermediate">⚡ Intermediate</option>
+                  <option value="Advanced">🔥 Advanced</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="p-activity">Activity Level</label>
+                <select class="form-control" id="p-activity" onchange="updateBMI()">
+                  <option value="">Select activity</option>
+                  <option value="Sedentary">🪑 Sedentary (desk job)</option>
+                  <option value="Lightly Active">🚶 Lightly Active (1–3x/week)</option>
+                  <option value="Moderately Active">🏃 Moderately Active (3–5x/week)</option>
+                  <option value="Very Active">💪 Very Active (6–7x/week)</option>
+                  <option value="Athlete">🏅 Athlete (2x/day)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label" for="p-workout-days">Workout Days / Week</label>
+                <input class="form-control" id="p-workout-days" type="number" placeholder="4" min="0" max="7"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="p-workout-time">Preferred Workout Time</label>
+                <select class="form-control" id="p-workout-time">
+                  <option value="">Select time</option>
+                  <option value="Morning">🌅 Morning</option>
+                  <option value="Afternoon">☀️ Afternoon</option>
+                  <option value="Evening">🌆 Evening</option>
+                  <option value="Night">🌙 Night</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-goal">Primary Fitness Goal</label>
+              <select class="form-control" id="p-goal">
+                <option value="">Select your goal</option>
+                <option value="Lose Weight">⬇️ Lose Weight</option>
+                <option value="Build Muscle">💪 Build Muscle</option>
+                <option value="Improve Endurance">🏃 Improve Endurance</option>
+                <option value="Stay Active">🧘 Stay Active &amp; Healthy</option>
+                <option value="Flexibility">🤸 Improve Flexibility</option>
+              </select>
+            </div>
+
+            <!-- ── Nutrition & Health ── -->
+            <div class="form-section-title">Nutrition &amp; Health</div>
+            <div class="form-group">
+              <label class="form-label" for="p-dietary">Dietary Preference</label>
+              <select class="form-control" id="p-dietary">
+                <option value="">Select preference</option>
+                <option value="No Restriction">🍽️ No Restriction</option>
+                <option value="Vegetarian">🥦 Vegetarian</option>
+                <option value="Vegan">🌱 Vegan</option>
+                <option value="Keto">🥩 Keto</option>
+                <option value="Paleo">🦴 Paleo</option>
+                <option value="Gluten-Free">🌾 Gluten-Free</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-injuries">Injuries / Physical Limitations</label>
+              <textarea class="form-control" id="p-injuries" rows="2" placeholder="e.g. lower back pain, knee injury (leave blank if none)" style="resize:vertical;"></textarea>
+            </div>
+
+            <button class="btn btn-primary" type="submit" id="btn-save-profile" style="min-width:150px;justify-content:center;margin-top:6px;">
+              💾 Save Changes
+            </button>
+          </form>
+        </div>
+
+        <!-- Account Info -->
+        <div class="info-card">
+          <h3>🔐 Account Information</h3>
+          <div class="info-row"><span>Email Address</span><span id="info-email">—</span></div>
+          <div class="info-row"><span>Member Since</span><span id="info-member-since">—</span></div>
+          <div class="info-row"><span>Gender</span><span id="info-gender" style="font-weight:600;">—</span></div>
+          <div class="info-row"><span>Fitness Goal</span><span id="info-goal" style="color:var(--accent);font-weight:600;">—</span></div>
+          <div class="info-row"><span>Activity Level</span><span id="info-activity" style="color:#059669;font-weight:600;">—</span></div>
+          <div class="info-row"><span>Dietary Preference</span><span id="info-dietary" style="color:#d97706;font-weight:600;">—</span></div>
+          <div class="info-row"><span>Account Status</span><span style="color:var(--success);font-weight:700;">● Active</span></div>
+        </div>
+
+        <!-- Nutrition Summary -->
+        <div class="info-card">
+          <h3>🥗 Nutrition Summary</h3>
+          <div class="info-row"><span>Total Meals Logged</span><span id="nutri-meals">—</span></div>
+          <div class="info-row"><span>Total Calories Tracked</span><span id="nutri-cal">—</span></div>
+          <div class="info-row"><span>Total Protein</span><span id="nutri-protein">—</span></div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="info-card" style="border-color:rgba(220,38,38,0.2);">
+          <h3 style="color:var(--danger);">⚠️ Danger Zone</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Signing out will end your current session.</p>
+          <button class="btn btn-danger" onclick="logout()">→ Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="utils.js"></script>
+  <script>
+    guardAuth();
+    let currentProfile = null;
+
+    // ── Activity multipliers for TDEE ──
+    const ACTIVITY_MULT = {
+      "Sedentary": 1.2, "Lightly Active": 1.375,
+      "Moderately Active": 1.55, "Very Active": 1.725, "Athlete": 1.9
+    };
+
+    // ── Helper: get selected gender from radio ──
+    function getSelectedGender() {
+      const radios = document.querySelectorAll('input[name="p-gender-radio"]');
+      for (const r of radios) { if (r.checked) return r.value; }
+      return "";
+    }
+
+    function setGenderRadio(val) {
+      const map = { Male: "gender-male", Female: "gender-female", Other: "gender-other" };
+      if (map[val]) document.getElementById(map[val]).checked = true;
+    }
+
+    async function loadProfile() {
+      const user = await authFetch(`${API}/auth/profile`);
+      if (!user) return;
+      currentProfile = user;
+
+      // Sidebar
+      const sbName   = document.getElementById("sidebar-name");
+      const sbAvatar = document.getElementById("sidebar-avatar");
+      if (sbName)   sbName.textContent = user.name;
+      if (sbAvatar) {
+        if (user.avatar) sbAvatar.innerHTML = `<img src="${escapeHtml(user.avatar)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        else             sbAvatar.textContent = (user.name || "U")[0].toUpperCase();
+      }
+
+      // Avatar circle
+      const circle = document.getElementById("profile-avatar-circle");
+      if (user.avatar) circle.innerHTML = `<img src="${escapeHtml(user.avatar)}" alt="Profile"/>`;
+      else             circle.textContent = (user.name || "U")[0].toUpperCase();
+
+      document.getElementById("profile-name").textContent  = user.name  || "—";
+      document.getElementById("profile-email").textContent = user.email || "—";
+      document.getElementById("mini-weight").textContent   = user.weight ? user.weight + " kg" : "—";
+      document.getElementById("mini-height").textContent   = user.height ? user.height + " cm" : "—";
+      document.getElementById("mini-age").textContent      = user.age    ? user.age + " yrs"   : "—";
+      document.getElementById("mini-target").textContent   = user.targetWeight ? user.targetWeight + " kg" : "—";
+
+      // Gender display badge under name
+      const gBadge = document.getElementById("gender-display-badge");
+      if (user.gender) {
+        const gIcon = user.gender === "Male" ? "♂️" : user.gender === "Female" ? "♀️" : "⚧️";
+        const gColor = user.gender === "Male" ? "#2563eb" : user.gender === "Female" ? "#e11d48" : "#7c3aed";
+        gBadge.innerHTML = `<span style="background:${gColor}18;color:${gColor};border:1px solid ${gColor}30;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;">${gIcon} ${escapeHtml(user.gender)}</span>`;
+        gBadge.style.display = "flex";
+        gBadge.style.justifyContent = "center";
+      } else {
+        gBadge.style.display = "none";
+      }
+
+      // Info card
+      document.getElementById("info-email").textContent        = user.email  || "—";
+      document.getElementById("info-member-since").textContent = formatDate(user.createdAt);
+      document.getElementById("info-gender").textContent       = user.gender          || "Not set";
+      document.getElementById("info-goal").textContent         = user.fitnessGoal     || "Not set";
+      document.getElementById("info-activity").textContent     = user.activityLevel   || "Not set";
+      document.getElementById("info-dietary").textContent      = user.dietaryPreference || "Not set";
+
+      // Fill form
+      document.getElementById("p-name").value         = user.name           || "";
+      document.getElementById("p-weight").value       = user.weight         || "";
+      document.getElementById("p-target-weight").value= user.targetWeight   || "";
+      document.getElementById("p-height").value       = user.height         || "";
+      document.getElementById("p-waist").value        = user.waistCm        || "";
+      document.getElementById("p-age").value          = user.age            || "";
+      setGenderRadio(user.gender || "");
+      document.getElementById("p-fitness-level").value = user.fitnessLevel  || "";
+      document.getElementById("p-activity").value      = user.activityLevel || "";
+      document.getElementById("p-goal").value          = user.fitnessGoal   || "";
+      document.getElementById("p-workout-days").value  = user.workoutDaysPerWeek || "";
+      document.getElementById("p-workout-time").value  = user.preferredWorkoutTime || "";
+      document.getElementById("p-dietary").value       = user.dietaryPreference || "";
+      document.getElementById("p-injuries").value      = user.injuries       || "";
+
+      renderChips(user);
+      updateBMI();
+    }
+
+    function renderChips(user) {
+      const bar = document.getElementById("fitness-chips-bar");
+      const chips = [];
+      if (user.gender)              chips.push(`<span class="fitness-chip chip-gender">⚧ ${escapeHtml(user.gender)}</span>`);
+      if (user.fitnessGoal)         chips.push(`<span class="fitness-chip chip-goal">🎯 ${escapeHtml(user.fitnessGoal)}</span>`);
+      if (user.activityLevel)       chips.push(`<span class="fitness-chip chip-activity">⚡ ${escapeHtml(user.activityLevel)}</span>`);
+      if (user.fitnessLevel)        chips.push(`<span class="fitness-chip chip-level">🏅 ${escapeHtml(user.fitnessLevel)}</span>`);
+      if (user.dietaryPreference)   chips.push(`<span class="fitness-chip chip-diet">🥗 ${escapeHtml(user.dietaryPreference)}</span>`);
+      if (user.workoutDaysPerWeek)  chips.push(`<span class="fitness-chip chip-activity">📅 ${escapeHtml(String(user.workoutDaysPerWeek))}x/week</span>`);
+      if (user.preferredWorkoutTime) chips.push(`<span class="fitness-chip chip-level">🕐 ${escapeHtml(user.preferredWorkoutTime)}</span>`);
+      bar.innerHTML = chips.join("");
+    }
+
+    async function loadQuickStats() {
+      const [wStats, dStats, goals] = await Promise.all([
+        authFetch(`${API}/workouts/stats/summary`),
+        authFetch(`${API}/diet/stats/summary`),
+        authFetch(`${API}/goals`)
+      ]);
+      if (wStats) document.getElementById("q-workouts").textContent = wStats.totalWorkouts ?? 0;
+      if (dStats) {
+        document.getElementById("q-meals").textContent       = dStats.totalMeals    ?? 0;
+        document.getElementById("nutri-meals").textContent   = dStats.totalMeals    ?? 0;
+        document.getElementById("nutri-cal").textContent     = (dStats.totalCalories ?? 0) + " kcal";
+        document.getElementById("nutri-protein").textContent = Math.round(dStats.totalProtein ?? 0) + "g";
+      }
+      if (goals) document.getElementById("q-goals").textContent = (goals || []).filter(g => !g.completed).length;
+      // Workout days from profile (stored)
+      const daysEl = document.getElementById("q-workout-days");
+      if (currentProfile && currentProfile.workoutDaysPerWeek) {
+        daysEl.textContent = currentProfile.workoutDaysPerWeek + " days";
+      }
+    }
+
+    function updateBMI() {
+      const w        = parseFloat(document.getElementById("p-weight").value);
+      const h        = parseFloat(document.getElementById("p-height").value);
+      const age      = parseFloat(document.getElementById("p-age").value);
+      const gender   = getSelectedGender();
+      const activity = document.getElementById("p-activity").value;
+      const waist    = parseFloat(document.getElementById("p-waist").value);
+      const targetW  = parseFloat(document.getElementById("p-target-weight").value);
+
+      const valEl     = document.getElementById("bmi-value");
+      const lblEl     = document.getElementById("bmi-label");
+      const needle    = document.getElementById("bmi-needle");
+      const idealEl   = document.getElementById("bmi-ideal");
+      const deltaEl   = document.getElementById("bmi-delta");
+      const bmrEl     = document.getElementById("bmi-bmr");
+      const tdeeEl    = document.getElementById("bmi-tdee");
+      const bfEl      = document.getElementById("bmi-bodyfat");
+      const waterEl   = document.getElementById("bmi-water");
+      const tipEl     = document.getElementById("bmi-tip");
+      const riskEl    = document.getElementById("bmi-risk-badge");
+
+      if (!w || !h || h <= 0) {
+        valEl.textContent = "—"; lblEl.textContent = "Enter weight & height";
+        lblEl.style.color = "var(--muted)"; needle.style.display = "none";
+        [idealEl, deltaEl, bmrEl, tdeeEl, bfEl, waterEl].forEach(el => el.textContent = "—");
+        tipEl.style.display = "none"; riskEl.innerHTML = "";
+        document.getElementById("whr-section").style.display = "none";
+        document.getElementById("macro-section").style.display = "none";
+        return;
+      }
+
+      const hM  = h / 100;
+      const bmi = w / (hM * hM);
+      valEl.textContent = bmi.toFixed(1);
+      needle.style.display = "block";
+
+      // Category
+      let label, color, pct, tip, riskClass, riskText;
+      if (bmi < 18.5) {
+        label = "Underweight"; color = "#0284c7"; pct = Math.min(28, (bmi / 18.5) * 28);
+        tip = "💡 You may need to increase calorie intake and focus on nutrient-dense foods. Strength training can help build healthy muscle mass.";
+        riskClass = "risk-mod"; riskText = "⚠️ Moderate Health Risk";
+      } else if (bmi < 25) {
+        label = "Normal Weight ✓"; color = "#059669"; pct = 28 + ((bmi - 18.5) / 6.5) * 27;
+        tip = "✅ Great job! Your BMI is in the healthy range. Maintain a balanced diet and regular exercise to stay here.";
+        riskClass = "risk-low"; riskText = "✅ Low Health Risk";
+      } else if (bmi < 30) {
+        label = "Overweight"; color = "#d97706"; pct = 55 + ((bmi - 25) / 5) * 20;
+        tip = "⚠️ Slightly above the healthy range. A modest calorie deficit (300–500 kcal/day) combined with regular aerobic exercise can help you reach your target.";
+        riskClass = "risk-mod"; riskText = "⚠️ Elevated Health Risk";
+      } else {
+        label = "Obese"; color = "#dc2626"; pct = Math.min(97, 75 + ((bmi - 30) / 10) * 22);
+        tip = "🚨 Please consider consulting a healthcare professional for a personalised weight management plan. Small sustainable steps lead to lasting results.";
+        riskClass = "risk-high"; riskText = "🚨 High Health Risk";
+      }
+
+      lblEl.textContent = label; lblEl.style.color = color;
+      needle.style.left = pct + "%";
+      tipEl.textContent = tip; tipEl.style.display = "block";
+      riskEl.innerHTML = `<span class="health-risk-badge ${riskClass}">${riskText}</span>`;
+
+      // Ideal weight range
+      const idealLow  = (18.5 * hM * hM).toFixed(1);
+      const idealHigh = (24.9 * hM * hM).toFixed(1);
+      idealEl.textContent = `${idealLow} – ${idealHigh} kg`;
+
+      // Delta to ideal
+      if (targetW > 0) {
+        const diff = (targetW - w).toFixed(1);
+        deltaEl.textContent = diff > 0 ? `+${diff} kg to gain` : `${diff} kg to lose`;
+        deltaEl.style.color = diff > 0 ? "#059669" : "#d97706";
+      } else {
+        const midIdeal = ((parseFloat(idealLow) + parseFloat(idealHigh)) / 2).toFixed(1);
+        const diff = (midIdeal - w).toFixed(1);
+        deltaEl.textContent = diff > 0 ? `+${diff} kg to ideal` : `${Math.abs(diff)} kg above ideal`;
+        deltaEl.style.color = diff > 0 ? "#0284c7" : "#d97706";
+      }
+
+      // BMR — Mifflin-St Jeor
+      let bmr = null;
+      if (age > 0 && gender) {
+        if (gender === "Male")   bmr = 10 * w + 6.25 * h - 5 * age + 5;
+        if (gender === "Female") bmr = 10 * w + 6.25 * h - 5 * age - 161;
+        if (gender === "Other")  bmr = 10 * w + 6.25 * h - 5 * age - 78;
+      }
+      bmrEl.textContent = bmr ? Math.round(bmr) + " kcal/day" : "Need age & gender";
+
+      // TDEE
+      const mult = ACTIVITY_MULT[activity];
+      const tdee = bmr && mult ? Math.round(bmr * mult) : null;
+      tdeeEl.textContent = tdee ? tdee + " kcal/day" : "Need activity level";
+
+      // Body fat % estimate (Deurenberg formula)
+      if (age > 0 && gender) {
+        const gF = gender === "Male" ? 1 : 0;
+        const bf = (1.2 * bmi) + (0.23 * age) - (10.8 * gF) - 5.4;
+        bfEl.textContent = Math.max(2, bf).toFixed(1) + "%";
+      } else {
+        bfEl.textContent = "Need age & gender";
+      }
+
+      // Daily water
+      waterEl.textContent = (w * 35 / 1000).toFixed(1) + " L/day";
+
+      // Waist-to-Height Ratio
+      const whrSection = document.getElementById("whr-section");
+      if (waist > 0 && h > 0) {
+        const whtr = (waist / h);
+        document.getElementById("whtr-value").textContent = whtr.toFixed(2);
+        let whtrLabel, whtrNeedlePct;
+        if (whtr < 0.5)       { whtrLabel = "Healthy ✓";    whtrNeedlePct = (whtr / 0.5) * 50; }
+        else if (whtr < 0.6)  { whtrLabel = "Overweight";   whtrNeedlePct = 50 + ((whtr - 0.5) / 0.1) * 30; }
+        else                  { whtrLabel = "High Risk";     whtrNeedlePct = Math.min(97, 80 + ((whtr - 0.6) / 0.1) * 17); }
+        document.getElementById("whtr-label").textContent = whtrLabel;
+        const whtrNeedle = document.getElementById("whtr-needle");
+        whtrNeedle.style.left = whtrNeedlePct + "%";
+        whtrNeedle.style.display = "block";
+        whrSection.style.display = "block";
+      } else {
+        whrSection.style.display = "none";
+      }
+
+      // Macro targets from TDEE
+      const macroSection = document.getElementById("macro-section");
+      if (tdee) {
+        // Standard split: 30% protein, 45% carbs, 25% fat
+        document.getElementById("macro-protein").textContent = Math.round(tdee * 0.30 / 4);
+        document.getElementById("macro-carbs").textContent   = Math.round(tdee * 0.45 / 4);
+        document.getElementById("macro-fat").textContent     = Math.round(tdee * 0.25 / 9);
+        macroSection.style.display = "block";
+      } else {
+        macroSection.style.display = "none";
+      }
+    }
+
+    async function handleSaveProfile(e) {
+      e.preventDefault();
+      const body = {
+        name:                document.getElementById("p-name").value.trim(),
+        weight:              parseFloat(document.getElementById("p-weight").value)       || 0,
+        targetWeight:        parseFloat(document.getElementById("p-target-weight").value)|| 0,
+        height:              parseFloat(document.getElementById("p-height").value)       || 0,
+        waistCm:             parseFloat(document.getElementById("p-waist").value)        || 0,
+        age:                 parseInt(document.getElementById("p-age").value)            || 0,
+        gender:              getSelectedGender(),
+        fitnessLevel:        document.getElementById("p-fitness-level").value,
+        activityLevel:       document.getElementById("p-activity").value,
+        fitnessGoal:         document.getElementById("p-goal").value,
+        workoutDaysPerWeek:  parseInt(document.getElementById("p-workout-days").value)  || 0,
+        preferredWorkoutTime:document.getElementById("p-workout-time").value,
+        dietaryPreference:   document.getElementById("p-dietary").value,
+        injuries:            document.getElementById("p-injuries").value.trim()
+      };
+      const btn = document.getElementById("btn-save-profile");
+      btn.disabled = true; btn.innerHTML = '<span class="spinner dark"></span> Saving…';
+      const result = await authFetch(`${API}/auth/profile`, "PUT", body);
+      btn.disabled = false; btn.innerHTML = "💾 Save Changes";
+      if (result) { toast("Profile updated! ✅"); loadProfile(); }
+    }
+
+    async function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!["image/jpeg","image/png","image/gif","image/webp"].includes(file.type)) { toast("Invalid image type"); return; }
+      if (file.size > 5*1024*1024) { toast("Image must be under 5MB"); return; }
+      toast("Uploading photo…");
+      const fd = new FormData();
+      fd.append("avatar", file);
+      fd.append("name",                document.getElementById("p-name").value   || (currentProfile && currentProfile.name) || "");
+      fd.append("weight",              document.getElementById("p-weight").value || "0");
+      fd.append("targetWeight",        document.getElementById("p-target-weight").value || "0");
+      fd.append("height",              document.getElementById("p-height").value || "0");
+      fd.append("waistCm",             document.getElementById("p-waist").value  || "0");
+      fd.append("age",                 document.getElementById("p-age").value    || "0");
+      fd.append("gender",              getSelectedGender());
+      fd.append("fitnessLevel",        document.getElementById("p-fitness-level").value);
+      fd.append("activityLevel",       document.getElementById("p-activity").value);
+      fd.append("fitnessGoal",         document.getElementById("p-goal").value);
+      fd.append("workoutDaysPerWeek",  document.getElementById("p-workout-days").value || "0");
+      fd.append("preferredWorkoutTime",document.getElementById("p-workout-time").value);
+      fd.append("dietaryPreference",   document.getElementById("p-dietary").value);
+      fd.append("injuries",            document.getElementById("p-injuries").value.trim());
+      const result = await authFetch(`${API}/auth/profile`, "PUT", fd);
+      if (result) { toast(result.avatar ? "Photo uploaded! ✅" : "Profile saved"); loadProfile(); }
+      event.target.value = "";
+    }
+
+    Promise.all([loadProfile(), loadQuickStats()]);
+  </script>
+</body>
+</html>

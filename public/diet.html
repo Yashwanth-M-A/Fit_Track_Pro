@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="FitTrack Pro Diet &amp; Nutrition — Log meals, track macros, and manage your daily nutrition intake."/>
+  <title>Diet &amp; Nutrition — FitTrack Pro</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Mobile Top Header -->
+  <header class="mobile-header">
+    <div class="mobile-header-logo">
+      <div class="mobile-header-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="mobile-header-logo-text">FitTrack Pro</span>
+    </div>
+    <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">✕</button>
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="sidebar-logo-text">FitTrack Pro</span>
+    </div>
+    <div class="sidebar-user">
+      <div id="sidebar-avatar">U</div>
+      <div>
+        <div id="sidebar-name" style="font-size:13px;font-weight:600;color:var(--text);">Loading…</div>
+        <div style="font-size:11px;color:var(--muted);">Member</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main Menu</div>
+      <a href="/dashboard.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="/workouts.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">💪</span> Workouts
+      </a>
+      <a href="/diet.html" class="nav-item active">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🥗</span> Diet &amp; Nutrition
+      </a>
+      <a href="/goals.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🎯</span> Goals
+      </a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="/profile.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">👤</span> Profile
+      </a>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <button class="logout-btn" onclick="logout()"><span>→</span> Sign Out</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Diet &amp; Nutrition</h1>
+        <p>Track your meals, calories, and macronutrients</p>
+      </div>
+      <button class="btn btn-success" onclick="openNewMealModal()">
+        <span>+</span> Log Meal
+      </button>
+    </div>
+
+    <!-- Nutrition hero strip -->
+    <div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #bbf7d0;border-radius:var(--r-lg);padding:0;margin-bottom:22px;display:flex;align-items:center;overflow:hidden;box-shadow:var(--shadow-sm);">
+      <img src="/images/nutrition_hero.png" alt="Healthy food" style="width:180px;height:110px;object-fit:cover;flex-shrink:0;" />
+      <div style="padding:18px 22px;">
+        <h3 style="font-size:16px;font-weight:700;color:#065f46;font-family:'Inter',sans-serif;margin-bottom:5px;">Fuel your performance 🥗</h3>
+        <p style="font-size:13px;color:#047857;line-height:1.5;max-width:420px;">Track every meal to understand your nutrition. Log proteins, carbs, and fats to stay aligned with your fitness goals and daily calorie targets.</p>
+      </div>
+    </div>
+
+    <!-- Nutrition Stats -->
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+      <div class="stat-card" style="animation-delay:0.05s">
+        <div class="stat-card-top"><div class="stat-icon green">🍽️</div></div>
+        <div class="stat-value" id="stat-total-meals">—</div>
+        <div class="stat-label">Total Meals</div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.1s">
+        <div class="stat-card-top"><div class="stat-icon rose">🔥</div></div>
+        <div class="stat-value" id="stat-today-cal">—</div>
+        <div class="stat-label">Today's Calories</div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.15s">
+        <div class="stat-card-top"><div class="stat-icon teal">💧</div></div>
+        <div class="stat-value" id="stat-today-protein">—</div>
+        <div class="stat-label">Today's Protein (g)</div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.2s">
+        <div class="stat-card-top"><div class="stat-icon orange">📈</div></div>
+        <div class="stat-value" id="stat-avg-cal">—</div>
+        <div class="stat-label">Avg Daily Calories</div>
+      </div>
+    </div>
+
+    <!-- Weekly Nutrition Chart -->
+    <div class="charts-grid" style="margin-bottom:22px;">
+      <div class="chart-card">
+        <h3>Weekly Calorie Intake — Last 7 Days</h3>
+        <div class="chart-container">
+          <canvas id="chart-calories"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Meal Type Breakdown</h3>
+        <div class="chart-container">
+          <canvas id="chart-meal-types"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-row">
+      <div class="form-group">
+        <label class="form-label">Meal Type</label>
+        <select class="form-control" id="filter-meal-type" onchange="applyFilters()">
+          <option value="">All Types</option>
+          <option value="Breakfast">Breakfast</option>
+          <option value="Lunch">Lunch</option>
+          <option value="Dinner">Dinner</option>
+          <option value="Snack">Snack</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">From Date</label>
+        <input class="form-control" id="filter-from" type="date" onchange="applyFilters()"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To Date</label>
+        <input class="form-control" id="filter-to" type="date" onchange="applyFilters()"/>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
+    </div>
+
+    <!-- Meal List -->
+    <div class="section-header">
+      <h2>Meal Log</h2>
+      <span id="meal-count-label" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+    <div id="meal-list">
+      <div class="empty-state">
+        <img src="/images/diet_illustration.png" alt="No meals" style="width:130px;height:auto;margin:0 auto 12px;opacity:0.85;"/>
+        <h3>No meals logged yet</h3>
+        <p>Start tracking your nutrition by logging a meal above</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Log / Edit Meal Modal -->
+  <div class="modal-overlay" id="modal-meal">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h2 id="modal-meal-title">Log Meal</h2>
+        <button class="modal-close" onclick="closeModal('modal-meal')">✕</button>
+      </div>
+      <form id="form-meal" onsubmit="handleSaveMeal(event)">
+        <input type="hidden" id="meal-id"/>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label" for="m-name">Meal Name *</label>
+            <input class="form-control" id="m-name" type="text" placeholder="e.g. Breakfast Bowl" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="m-type">Meal Type *</label>
+            <select class="form-control" id="m-type" required>
+              <option value="Breakfast">🌅 Breakfast</option>
+              <option value="Lunch">☀️ Lunch</option>
+              <option value="Dinner">🌙 Dinner</option>
+              <option value="Snack">🍎 Snack</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="m-date">Date</label>
+          <input class="form-control" id="m-date" type="date" style="max-width:220px;"/>
+        </div>
+
+        <!-- Food Items -->
+        <div class="exercises-header" style="margin-top:4px;">
+          <label class="form-label" style="margin-bottom:0;">Food Items</label>
+          <button type="button" class="btn btn-outline btn-sm" onclick="addFoodRow()">+ Add Food</button>
+        </div>
+        <div class="col-labels" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 30px;gap:6px;margin-top:6px;padding:0 2px;">
+          <span>Food Name</span><span>Qty</span><span>Cal</span><span>Protein(g)</span><span>Carbs/Fat(g)</span><span></span>
+        </div>
+        <div id="foods-container"></div>
+
+        <!-- Totals preview -->
+        <div id="meal-totals-preview" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;color:var(--muted);margin:8px 0;display:none;">
+          <strong style="color:var(--text);">Totals: </strong>
+          <span id="preview-cal"></span> kcal &nbsp;·&nbsp;
+          Protein: <span id="preview-protein"></span>g &nbsp;·&nbsp;
+          Carbs: <span id="preview-carbs"></span>g &nbsp;·&nbsp;
+          Fat: <span id="preview-fat"></span>g
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="m-notes">Notes</label>
+          <textarea class="form-control" id="m-notes" rows="2" placeholder="Any notes about this meal…"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-meal')">Cancel</button>
+          <button type="submit" class="btn btn-success" id="btn-save-meal">Save Meal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="utils.js"></script>
+  <script>
+    guardAuth();
+    loadSidebarUser();
+
+    const MEAL_COLORS = {
+      Breakfast:"#b45309", Lunch:"#059669", Dinner:"#6366f1", Snack:"#e11d48", Other:"#475569"
+    };
+
+    // ─── Load Stats ────────────────────────────────────────────────────────────
+    async function loadDietStats() {
+      const data = await authFetch(`${API}/diet/stats/summary`);
+      if (!data) return;
+
+      document.getElementById("stat-total-meals").textContent   = data.totalMeals    ?? 0;
+      document.getElementById("stat-today-cal").textContent     = data.todayCalories  ?? 0;
+      document.getElementById("stat-today-protein").textContent = Math.round(data.totalProtein / Math.max(1, data.totalMeals) * /* today's proportion */ 1) + "—";
+
+      // recalculate today protein from last7
+      const today = (data.last7 || []).at(-1);
+      document.getElementById("stat-today-protein").textContent = today ? Math.round(today.protein) : 0;
+
+      const days = (data.last7 || []).filter(d => d.calories > 0);
+      const avg  = days.length ? Math.round(days.reduce((s,d) => s + d.calories, 0) / days.length) : 0;
+      document.getElementById("stat-avg-cal").textContent = avg;
+
+      renderCalorieChart(data.last7 || []);
+      renderMealTypeChart(data.mealTypes || {});
+    }
+
+    function renderCalorieChart(last7) {
+      const labels = last7.map(d => new Date(d.date).toLocaleDateString("en-GB", {weekday:"short",day:"numeric"}));
+      new Chart(document.getElementById("chart-calories"), {
+        type:"bar",
+        data:{ labels, datasets:[
+          { label:"Calories (kcal)", data:last7.map(d=>d.calories), backgroundColor:"rgba(16,185,129,0.7)", borderColor:"#059669", borderWidth:1, borderRadius:5 },
+          { label:"Protein (g)",     data:last7.map(d=>d.protein),  backgroundColor:"rgba(14,165,233,0.6)", borderColor:"#0284c7", borderWidth:1, borderRadius:5, yAxisID:"y1" }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ labels:{ color:"#64748b", font:{size:12} } } },
+          scales:{
+            x:  { ticks:{color:"#94a3b8"}, grid:{color:"rgba(0,0,0,0.04)"} },
+            y:  { ticks:{color:"#94a3b8"}, grid:{color:"rgba(0,0,0,0.04)"}, position:"left" },
+            y1: { ticks:{color:"#94a3b8"}, grid:{display:false}, position:"right" }
+          }
+        }
+      });
+    }
+
+    function renderMealTypeChart(mealTypes) {
+      const keys = Object.keys(mealTypes);
+      if (!keys.length) {
+        document.getElementById("chart-meal-types").parentElement.innerHTML =
+          `<div class="empty-state" style="box-shadow:none;border:none;padding:30px 0;"><div class="empty-state-icon" style="font-size:36px;">🍽️</div><p>No meals yet</p></div>`;
+        return;
+      }
+      new Chart(document.getElementById("chart-meal-types"), {
+        type:"doughnut",
+        data:{ labels:keys, datasets:[{ data:keys.map(k=>mealTypes[k]), backgroundColor:keys.map(k=>MEAL_COLORS[k]||"#94a3b8"), borderWidth:2, borderColor:"#fff" }] },
+        options:{ responsive:true, maintainAspectRatio:false, cutout:"65%",
+          plugins:{ legend:{ position:"bottom", labels:{ color:"#64748b", font:{size:12}, padding:10 } } } }
+      });
+    }
+
+    // ─── Load Meals ────────────────────────────────────────────────────────────
+    async function loadMeals(params = "") {
+      const meals = await authFetch(`${API}/diet${params}`);
+      renderMeals(meals || []);
+    }
+
+    function renderMeals(meals) {
+      const container = document.getElementById("meal-list");
+      document.getElementById("meal-count-label").textContent = meals.length ? `${meals.length} entries` : "";
+      if (!meals.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <img src="/images/diet_illustration.png" alt="No meals" style="width:130px;height:auto;margin:0 auto 12px;opacity:0.85;"/>
+            <h3>No meals logged yet</h3>
+            <p>Start tracking your nutrition by logging a meal above</p>
+          </div>`;
+        return;
+      }
+      container.innerHTML = meals.map(m => `
+        <div class="diet-card" style="margin-bottom:10px;">
+          <div class="workout-card-body">
+            <div class="workout-card-meta">
+              <span class="meal-type-badge meal-${escapeHtml(m.mealType)}">${escapeHtml(m.mealType)}</span>
+              <span>${formatDate(m.date)}</span>
+              ${m.foods && m.foods.length ? `<span>${m.foods.length} food item${m.foods.length > 1 ? 's' : ''}</span>` : ""}
+            </div>
+            <div class="workout-card-title">${escapeHtml(m.name)}</div>
+            ${m.notes ? `<div style="font-size:12px;color:var(--muted);margin:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px;">${escapeHtml(m.notes)}</div>` : ""}
+            <div class="macro-pills">
+              <span class="macro-pill cal">🔥 ${escapeHtml(String(m.totalCalories))} kcal</span>
+              <span class="macro-pill protein">Protein: ${escapeHtml(String(m.totalProtein))}g</span>
+              <span class="macro-pill carbs">Carbs: ${escapeHtml(String(m.totalCarbs))}g</span>
+              <span class="macro-pill fat">Fat: ${escapeHtml(String(m.totalFat))}g</span>
+            </div>
+          </div>
+          <div class="workout-card-actions">
+            <button class="btn btn-outline btn-sm btn-icon" onclick="editMeal('${escapeHtml(m._id)}')" title="Edit">✏️</button>
+            <button class="btn btn-danger  btn-sm btn-icon" onclick="deleteMeal('${escapeHtml(m._id)}')" title="Delete">🗑️</button>
+          </div>
+        </div>`).join("");
+    }
+
+    // ─── Filters ───────────────────────────────────────────────────────────────
+    function applyFilters() {
+      const type = document.getElementById("filter-meal-type").value;
+      const from = document.getElementById("filter-from").value;
+      const to   = document.getElementById("filter-to").value;
+      const p = new URLSearchParams();
+      if (type) p.set("mealType", type);
+      if (from) p.set("from", from);
+      if (to)   p.set("to", to);
+      loadMeals(p.toString() ? `?${p}` : "");
+    }
+
+    function clearFilters() {
+      document.getElementById("filter-meal-type").value = "";
+      document.getElementById("filter-from").value = "";
+      document.getElementById("filter-to").value   = "";
+      loadMeals();
+    }
+
+    // ─── Food Rows ─────────────────────────────────────────────────────────────
+    function addFoodRow(f = {}) {
+      const container = document.getElementById("foods-container");
+      const div = document.createElement("div");
+      div.className = "food-row";
+      div.innerHTML = `
+        <input class="form-control f-name"    type="text"   placeholder="e.g. Oats"     value="${escapeHtml(f.name    || '')}"/>
+        <input class="form-control f-qty"     type="number" placeholder="100"  min="0"  value="${escapeHtml(String(f.quantity || ''))}"/>
+        <input class="form-control f-cal"     type="number" placeholder="kcal" min="0"  value="${escapeHtml(String(f.calories || ''))}" oninput="updateTotals()"/>
+        <input class="form-control f-protein" type="number" placeholder="g"    min="0" step="0.1" value="${escapeHtml(String(f.protein || ''))}" oninput="updateTotals()"/>
+        <input class="form-control f-carbs"   type="number" placeholder="g"    min="0" step="0.1" value="${escapeHtml(String(f.carbs   || ''))}" oninput="updateTotals()"/>
+        <button type="button" class="btn-remove-ex" onclick="this.parentElement.remove();updateTotals()">−</button>`;
+      container.appendChild(div);
+      updateTotals();
+    }
+
+    function getFoods() {
+      return [...document.querySelectorAll(".food-row")].map(row => ({
+        name:     row.querySelector(".f-name").value.trim(),
+        quantity: parseFloat(row.querySelector(".f-qty").value)     || 0,
+        calories: parseFloat(row.querySelector(".f-cal").value)     || 0,
+        protein:  parseFloat(row.querySelector(".f-protein").value) || 0,
+        carbs:    parseFloat(row.querySelector(".f-carbs").value)   || 0,
+        fat:      0,
+        unit:     "g"
+      })).filter(f => f.name);
+    }
+
+    function updateTotals() {
+      const rows = [...document.querySelectorAll(".food-row")];
+      if (!rows.length) { document.getElementById("meal-totals-preview").style.display = "none"; return; }
+      const cal     = rows.reduce((s, r) => s + (parseFloat(r.querySelector(".f-cal").value)     || 0), 0);
+      const protein = rows.reduce((s, r) => s + (parseFloat(r.querySelector(".f-protein").value) || 0), 0);
+      const carbs   = rows.reduce((s, r) => s + (parseFloat(r.querySelector(".f-carbs").value)   || 0), 0);
+      document.getElementById("preview-cal").textContent     = Math.round(cal);
+      document.getElementById("preview-protein").textContent = protein.toFixed(1);
+      document.getElementById("preview-carbs").textContent   = carbs.toFixed(1);
+      document.getElementById("preview-fat").textContent     = "—";
+      document.getElementById("meal-totals-preview").style.display = "block";
+    }
+
+    // ─── Open New Modal ────────────────────────────────────────────────────────
+    function openNewMealModal() {
+      document.getElementById("modal-meal-title").textContent = "Log Meal";
+      document.getElementById("form-meal").reset();
+      document.getElementById("meal-id").value = "";
+      document.getElementById("foods-container").innerHTML = "";
+      document.getElementById("meal-totals-preview").style.display = "none";
+      document.getElementById("m-date").value = new Date().toISOString().split("T")[0];
+      document.getElementById("btn-save-meal").textContent = "Save Meal";
+      openModal("modal-meal");
+    }
+
+    // ─── Edit Meal ─────────────────────────────────────────────────────────────
+    async function editMeal(id) {
+      const m = await authFetch(`${API}/diet/${id}`);
+      if (!m) return;
+      document.getElementById("modal-meal-title").textContent = "Edit Meal";
+      document.getElementById("meal-id").value  = m._id;
+      document.getElementById("m-name").value   = m.name;
+      document.getElementById("m-type").value   = m.mealType;
+      document.getElementById("m-notes").value  = m.notes || "";
+      document.getElementById("m-date").value   = m.date ? m.date.split("T")[0] : "";
+      document.getElementById("btn-save-meal").textContent = "Update Meal";
+      const container = document.getElementById("foods-container");
+      container.innerHTML = "";
+      (m.foods || []).forEach(f => addFoodRow(f));
+      updateTotals();
+      openModal("modal-meal");
+    }
+
+    // ─── Save Meal ─────────────────────────────────────────────────────────────
+    async function handleSaveMeal(e) {
+      e.preventDefault();
+      const id   = document.getElementById("meal-id").value;
+      const body = {
+        name:     document.getElementById("m-name").value.trim(),
+        mealType: document.getElementById("m-type").value,
+        notes:    document.getElementById("m-notes").value.trim(),
+        date:     document.getElementById("m-date").value,
+        foods:    getFoods()
+      };
+      const btn = document.getElementById("btn-save-meal");
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+      const result = id
+        ? await authFetch(`${API}/diet/${id}`, "PUT", body)
+        : await authFetch(`${API}/diet`, "POST", body);
+      btn.disabled = false;
+      btn.textContent = id ? "Update Meal" : "Save Meal";
+      if (result) {
+        toast(id ? "Meal updated!" : "Meal logged!");
+        closeModal("modal-meal");
+        await Promise.all([loadMeals(), loadDietStats()]);
+      }
+    }
+
+    // ─── Delete Meal ───────────────────────────────────────────────────────────
+    async function deleteMeal(id) {
+      if (!confirm("Delete this meal entry? This cannot be undone.")) return;
+      const result = await authFetch(`${API}/diet/${id}`, "DELETE");
+      if (result) {
+        toast("Meal deleted");
+        await Promise.all([loadMeals(), loadDietStats()]);
+      }
+    }
+
+    // ─── Init ──────────────────────────────────────────────────────────────────
+    loadDietStats();
+    loadMeals();
+  </script>
+</body>
+</html>

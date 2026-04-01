@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="FitTrack Pro Workouts — Log, view, filter, edit, and delete your training sessions."/>
+  <title>Workouts — FitTrack Pro</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- Mobile Top Header -->
+  <header class="mobile-header">
+    <div class="mobile-header-logo">
+      <div class="mobile-header-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="mobile-header-logo-text">FitTrack Pro</span>
+    </div>
+    <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">✕</button>
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><img src="/images/logo.png" alt="FitTrack Pro"/></div>
+      <span class="sidebar-logo-text">FitTrack Pro</span>
+    </div>
+    <div class="sidebar-user">
+      <div id="sidebar-avatar">U</div>
+      <div>
+        <div id="sidebar-name" style="font-size:13px;font-weight:600;color:var(--text);">Loading…</div>
+        <div style="font-size:11px;color:var(--muted);">Member</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main Menu</div>
+      <a href="/dashboard.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="/workouts.html" class="nav-item active">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">💪</span> Workouts
+      </a>
+      <a href="/diet.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🥗</span> Diet &amp; Nutrition
+      </a>
+      <a href="/goals.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">🎯</span> Goals
+      </a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="/profile.html" class="nav-item">
+        <div class="nav-active-indicator"></div>
+        <span class="nav-icon">👤</span> Profile
+      </a>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <button class="logout-btn" onclick="logout()"><span>→</span> Sign Out</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Workouts</h1>
+        <p>Track and manage your training sessions</p>
+      </div>
+      <button class="btn btn-primary" onclick="openNewWorkoutModal()">
+        <span>+</span> Log Workout
+      </button>
+    </div>
+
+    <!-- Workout hero strip -->
+    <div style="background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1px solid #bfdbfe;border-radius:var(--r-lg);padding:0;margin-bottom:22px;display:flex;align-items:center;overflow:hidden;box-shadow:var(--shadow-sm);">
+      <img src="/images/fitness_hero.png" alt="Workout" style="width:180px;height:110px;object-fit:cover;flex-shrink:0;" />
+      <div style="padding:18px 22px;">
+        <h3 style="font-size:16px;font-weight:700;color:#1e40af;font-family:'Inter',sans-serif;margin-bottom:5px;">Push your limits 💪</h3>
+        <p style="font-size:13px;color:#1d4ed8;line-height:1.5;max-width:420px;">Log every session to track your strength and endurance over time. Add exercises, sets, reps, and calories to get a full picture of your training progress.</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-control" id="filter-category" onchange="applyFilters()">
+          <option value="">All Categories</option>
+          <option value="Cardio">Cardio</option>
+          <option value="Strength">Strength</option>
+          <option value="Flexibility">Flexibility</option>
+          <option value="Sports">Sports</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">From Date</label>
+        <input class="form-control" id="filter-from" type="date" onchange="applyFilters()"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To Date</label>
+        <input class="form-control" id="filter-to" type="date" onchange="applyFilters()"/>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
+    </div>
+
+    <div class="section-header">
+      <h2>Workout Log</h2>
+      <span id="workout-count-label" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+    <div class="workout-list" id="workout-list">
+      <div class="empty-state">
+        <img src="/images/workout_illustration.png" alt="No workouts" style="width:130px;height:auto;margin:0 auto 12px;opacity:0.85;"/>
+        <h3>No workouts logged yet</h3>
+        <p>Hit the button above to track your first session</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Log / Edit Workout Modal -->
+  <div class="modal-overlay" id="modal-workout">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-workout-title">Log Workout</h2>
+        <button class="modal-close" onclick="closeModal('modal-workout')">✕</button>
+      </div>
+      <form id="form-workout" onsubmit="handleSaveWorkout(event)">
+        <input type="hidden" id="workout-id"/>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label" for="w-title">Title *</label>
+            <input class="form-control" id="w-title" type="text" placeholder="e.g. Morning Run" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="w-category">Category *</label>
+            <select class="form-control" id="w-category" required>
+              <option value="Cardio">Cardio</option>
+              <option value="Strength">Strength</option>
+              <option value="Flexibility">Flexibility</option>
+              <option value="Sports">Sports</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row cols-3">
+          <div class="form-group">
+            <label class="form-label" for="w-duration">Duration (min) *</label>
+            <input class="form-control" id="w-duration" type="number" placeholder="45" min="1" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="w-calories">Calories (kcal)</label>
+            <input class="form-control" id="w-calories" type="number" placeholder="300" min="0"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="w-date">Date</label>
+            <input class="form-control" id="w-date" type="date"/>
+          </div>
+        </div>
+
+        <!-- Exercises -->
+        <div class="exercises-header">
+          <label class="form-label" style="margin-bottom:0;">Exercises</label>
+          <button type="button" class="btn btn-outline btn-sm" onclick="addExerciseRow()">+ Add Exercise</button>
+        </div>
+        <div class="col-labels" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 30px;gap:6px;margin-top:6px;padding:0 2px;">
+          <span>Exercise Name</span><span>Sets</span><span>Reps</span><span>Weight (kg)</span><span></span>
+        </div>
+        <div id="exercises-container"></div>
+
+        <div class="form-group" style="margin-top:8px;">
+          <label class="form-label" for="w-notes">Notes</label>
+          <textarea class="form-control" id="w-notes" rows="2" placeholder="How did it feel? Any personal records?"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-workout')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-workout">Save Workout</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="utils.js"></script>
+  <script>
+    guardAuth();
+    loadSidebarUser();
+
+    async function loadWorkouts(params = "") {
+      const list = await authFetch(`${API}/workouts${params}`);
+      renderWorkouts(list || []);
+    }
+
+    function renderWorkouts(workouts) {
+      const container = document.getElementById("workout-list");
+      const lbl = document.getElementById("workout-count-label");
+      lbl.textContent = workouts.length ? `${workouts.length} entries` : "";
+      if (!workouts.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <img src="/images/workout_illustration.png" alt="No workouts" style="width:130px;height:auto;margin:0 auto 12px;opacity:0.85;"/>
+            <h3>No workouts found</h3>
+            <p>Log a workout using the button above</p>
+          </div>`;
+        return;
+      }
+      container.innerHTML = workouts.map(w => `
+        <div class="workout-card cat-${escapeHtml(w.category)}">
+          <div class="workout-card-body">
+            <div class="workout-card-meta">
+              <span class="workout-cat-badge cat-${escapeHtml(w.category)}">${escapeHtml(w.category)}</span>
+              <span>${formatDate(w.date)}</span>
+            </div>
+            <div class="workout-card-title">${escapeHtml(w.title)}</div>
+            ${w.notes ? `<div style="font-size:12px;color:var(--muted);margin:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:460px;">${escapeHtml(w.notes)}</div>` : ""}
+            <div class="workout-card-stats">
+              <span class="workout-stat">⏱️ ${escapeHtml(String(w.duration))} min</span>
+              <span class="workout-stat">🔥 ${escapeHtml(String(w.calories||0))} kcal</span>
+              <span class="workout-stat">🏋️ ${(w.exercises||[]).length} exercises</span>
+            </div>
+          </div>
+          <div class="workout-card-actions">
+            <button class="btn btn-outline btn-sm btn-icon" onclick="editWorkout('${escapeHtml(w._id)}')" title="Edit">✏️</button>
+            <button class="btn btn-danger  btn-sm btn-icon" onclick="deleteWorkout('${escapeHtml(w._id)}')" title="Delete">🗑️</button>
+          </div>
+        </div>`).join("");
+    }
+
+    function applyFilters() {
+      const cat  = document.getElementById("filter-category").value;
+      const from = document.getElementById("filter-from").value;
+      const to   = document.getElementById("filter-to").value;
+      const p = new URLSearchParams();
+      if (cat)  p.set("category", cat);
+      if (from) p.set("from", from);
+      if (to)   p.set("to", to);
+      loadWorkouts(p.toString() ? `?${p}` : "");
+    }
+
+    function clearFilters() {
+      document.getElementById("filter-category").value = "";
+      document.getElementById("filter-from").value = "";
+      document.getElementById("filter-to").value   = "";
+      loadWorkouts();
+    }
+
+    function addExerciseRow(ex = {}) {
+      const container = document.getElementById("exercises-container");
+      const div = document.createElement("div");
+      div.className = "exercise-row";
+      div.innerHTML = `
+        <input class="form-control ex-name"   type="text"   placeholder="Exercise name" value="${escapeHtml(ex.name||'')}"/>
+        <input class="form-control ex-sets"   type="number" placeholder="Sets"  min="0"       value="${escapeHtml(String(ex.sets||''))}"/>
+        <input class="form-control ex-reps"   type="number" placeholder="Reps"  min="0"       value="${escapeHtml(String(ex.reps||''))}"/>
+        <input class="form-control ex-weight" type="number" placeholder="kg"    min="0" step="0.5" value="${escapeHtml(String(ex.weight||''))}"/>
+        <button type="button" class="btn-remove-ex" onclick="this.parentElement.remove()">−</button>`;
+      container.appendChild(div);
+    }
+
+    function getExercises() {
+      return [...document.querySelectorAll(".exercise-row")].map(row => ({
+        name:   row.querySelector(".ex-name").value.trim(),
+        sets:   parseFloat(row.querySelector(".ex-sets").value)   || 0,
+        reps:   parseFloat(row.querySelector(".ex-reps").value)   || 0,
+        weight: parseFloat(row.querySelector(".ex-weight").value) || 0
+      })).filter(ex => ex.name);
+    }
+
+    function openNewWorkoutModal() {
+      document.getElementById("modal-workout-title").textContent = "Log Workout";
+      document.getElementById("form-workout").reset();
+      document.getElementById("workout-id").value = "";
+      document.getElementById("exercises-container").innerHTML = "";
+      document.getElementById("w-date").value = new Date().toISOString().split("T")[0];
+      document.getElementById("btn-save-workout").textContent = "Save Workout";
+      openModal("modal-workout");
+    }
+
+    async function editWorkout(id) {
+      const w = await authFetch(`${API}/workouts/${id}`);
+      if (!w) return;
+      document.getElementById("modal-workout-title").textContent = "Edit Workout";
+      document.getElementById("workout-id").value  = w._id;
+      document.getElementById("w-title").value     = w.title;
+      document.getElementById("w-category").value  = w.category;
+      document.getElementById("w-duration").value  = w.duration;
+      document.getElementById("w-calories").value  = w.calories || 0;
+      document.getElementById("w-notes").value     = w.notes   || "";
+      document.getElementById("w-date").value      = w.date ? w.date.split("T")[0] : "";
+      document.getElementById("btn-save-workout").textContent = "Update Workout";
+      const container = document.getElementById("exercises-container");
+      container.innerHTML = "";
+      (w.exercises || []).forEach(ex => addExerciseRow(ex));
+      openModal("modal-workout");
+    }
+
+    async function handleSaveWorkout(e) {
+      e.preventDefault();
+      const id = document.getElementById("workout-id").value;
+      const body = {
+        title:     document.getElementById("w-title").value.trim(),
+        category:  document.getElementById("w-category").value,
+        duration:  parseFloat(document.getElementById("w-duration").value),
+        calories:  parseFloat(document.getElementById("w-calories").value) || 0,
+        notes:     document.getElementById("w-notes").value.trim(),
+        date:      document.getElementById("w-date").value,
+        exercises: getExercises()
+      };
+      const btn = document.getElementById("btn-save-workout");
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+      const result = id
+        ? await authFetch(`${API}/workouts/${id}`, "PUT", body)
+        : await authFetch(`${API}/workouts`, "POST", body);
+      btn.disabled = false;
+      btn.textContent = id ? "Update Workout" : "Save Workout";
+      if (result) { toast(id ? "Workout updated!" : "Workout logged!"); closeModal("modal-workout"); loadWorkouts(); }
+    }
+
+    async function deleteWorkout(id) {
+      if (!confirm("Delete this workout? This cannot be undone.")) return;
+      const result = await authFetch(`${API}/workouts/${id}`, "DELETE");
+      if (result) { toast("Workout deleted"); loadWorkouts(); }
+    }
+
+    loadWorkouts();
+  </script>
+</body>
+</html>
